@@ -134,7 +134,7 @@ namespace NonlinearFilter
 			// Step 3
 			{
 				Matrix H = CalculateH(state_k1_k1);
-				Matrix F = CalculateF(state_k1_k);
+				Matrix F = CalculateF(state_k_k);
 				Vector y_k1 = Measurement;
 				Matrix K = P_k_k * F.Transpose() * H.Transpose() * (H * P_k_k * H.Transpose() + Info.R).Reverse();
 				state_k_k1 = state_k_k + K * (y_k1 - Geth(state_k1_k1));
