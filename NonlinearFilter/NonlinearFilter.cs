@@ -15,7 +15,9 @@ namespace NonlinearFilter
 		public Func<Vector, double>[] h;
 
 		public Matrix Q;
+		public Matrix G;
 		public Matrix R;
+
 	}
 
 	class NonlinearFilter
@@ -36,7 +38,7 @@ namespace NonlinearFilter
 
 			// First step
 			Vector state_k1_k = GetNextState(state_k_k);
-			Matrix P_k1_k = F * P_k_k * F.Transpose() + Info.Q;
+			Matrix P_k1_k = F * P_k_k * F.Transpose() + Info.G * Info.Q * Info.G.Transpose();
 
 			// Second step
 			Matrix H = CalculateH(state_k1_k);
@@ -46,7 +48,6 @@ namespace NonlinearFilter
 
 			Matrix K = P_k1_k * H.Transpose() * (H * P_k1_k * H.Transpose() + Info.R).Reverse();
 			Vector state_k1_k1 = state_k1_k + K * (y_k1 - h);
-
 			Matrix P_k1_k1 = (Matrix.Identity(K.N) - K * H) * P_k1_k;
 
 			return (state_k1_k1, P_k1_k1);
@@ -113,28 +114,30 @@ namespace NonlinearFilter
 			{
 				Matrix F = CalculateF(state_k_k);
 				state_k1_k = GetNextState(state_k_k, CurrentTime);
-				P_k1_k = F * P_k_k * F.Transpose() + Info.Q;
+				P_k1_k = F * P_k_k * F.Transpose() + Info.G * Info.Q * Info.G.Transpose();
 			}
 
 			Vector state_k1_k1;
+			Matrix P_k1_k1;
 			// Step 2
 			{
 				Matrix H = CalculateH(state_k1_k);
-				Vector y_k1 = Measurement;
 				Vector h = Geth(state_k1_k);
-				Matrix K = P_k1_k * H.Transpose() * (H * P_k1_k * H.Transpose() + Info.R).Reverse();
+				Vector y_k1 = Measurement;
 
+				Matrix K = P_k1_k * H.Transpose() * (H * P_k1_k * H.Transpose() + Info.R).Reverse();
 				state_k1_k1 = state_k1_k + K * (y_k1 - h);
+				P_k1_k1 = (Matrix.Identity(K.N) - K * H) * P_k1_k;
 			}
 
 			Vector state_k_k1;
 			// Step 3
 			{
 				Matrix H = CalculateH(state_k1_k1);
-				Matrix F = CalculateF(state_k_k);
+				Matrix F = CalculateF(state_k1_k);
 				Vector y_k1 = Measurement;
-				Matrix K = P_k_k * F.Transpose() * H.Transpose() * (H * P_k1_k * H.Transpose() + Info.R).Reverse();
-				state_k_k1 = state_k_k + K * (y_k1 - H * state_k1_k);
+				Matrix K = P_k_k * F.Transpose() * H.Transpose() * (H * P_k_k * H.Transpose() + Info.R).Reverse();
+				state_k_k1 = state_k_k + K * (y_k1 - Geth(state_k1_k1));
 			}
 
 			Vector new_state_k1_k;
@@ -145,7 +148,7 @@ namespace NonlinearFilter
 				Vector state_p_k1 = GetNextState(state_p_k, CurrentTime);
 				Matrix F = CalculateF(state_p_k);
 				new_state_k1_k = state_p_k1 + F * (state_k_k - state_p_k);
-				new_P_k1_k = F * P_k_k * F.Transpose() + Info.Q;
+				new_P_k1_k = F * P_k_k * F.Transpose() + Info.G * Info.Q * Info.G.Transpose();
 			}
 
 			Vector new_state_k1_k1;
@@ -153,10 +156,10 @@ namespace NonlinearFilter
 			// Step 5
 			{
 				Matrix H = CalculateH(new_state_k1_k);
-				Vector y_k1 = Measurement;
 				Vector h = Geth(new_state_k1_k);
-				Matrix K = new_P_k1_k * H.Transpose() * (H * new_P_k1_k * H.Transpose() + Info.R).Reverse();
+				Vector y_k1 = Measurement;
 
+				Matrix K = new_P_k1_k * H.Transpose() * (H * new_P_k1_k * H.Transpose() + Info.R).Reverse();
 				new_state_k1_k1 = new_state_k1_k + K * (y_k1 - h);
 				new_P_k1_k1 = (Matrix.Identity(K.N) - K * H) * new_P_k1_k;
 			}
