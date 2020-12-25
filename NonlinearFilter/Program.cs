@@ -12,96 +12,7 @@ namespace NonlinearFilter
 	{
 		static string PlotterFolderPath = "C:/Users/Nikita/source/repos/NonlinearFilter/Plotter/";
 
-		static double dt = 0.1;
-
-		static void TestMatrix()
-		{
-			Matrix a = new Matrix(2, 3);
-			Vector e1 = new Vector(2);
-			e1[0] = 1;
-			e1[1] = 1;
-
-			Vector e2 = new Vector(3);
-			e2[0] = 1;
-			e2[1] = 1;
-			e2[2] = 1;
-
-			a[0, 0] = 1;
-			a[0, 1] = 2;
-			a[0, 2] = 3;
-
-			a[1, 0] = 1;
-			a[1, 1] = 2;
-			a[1, 2] = 3;
-
-
-			Vector c = a * e2;
-			Vector c1 = e1 * a;
-		}
-
-		static void TestTransposeMatrix()
-		{
-			Matrix a = new Matrix(2, 3);
-			a[0, 0] = 1;
-			a[0, 1] = 2;
-			a[0, 2] = 3;
-
-			a[1, 0] = 1;
-			a[1, 1] = 2;
-			a[1, 2] = 3;
-
-			Matrix b = a.Transpose();
-		}
-
-		static void TestReverseMatrix1()
-		{
-			Matrix a = new Matrix(2, 2);
-			a[0, 0] = 1;
-			a[0, 1] = 1;
-
-			a[1, 0] = 0;
-			a[1, 1] = 1;
-
-			Matrix b = a.Reverse();
-			Matrix c = a * b;
-		}
-
-		static void TestReverseMatrix2()
-		{
-			Matrix a = new Matrix(5, 5);
-			a[0, 0] = 0;
-			a[0, 1] = 0;
-			a[0, 2] = 3;
-			a[0, 3] = 0.8;
-			a[0, 4] = 0.15;
-
-			a[1, 0] = 8;
-			a[1, 1] = 2;
-			a[1, 2] = -1;
-			a[1, 3] = 19;
-			a[1, 4] = 25.8;
-
-			a[2, 0] = -9;
-			a[2, 1] = 8;
-			a[2, 2] = 5;
-			a[2, 3] = 7.8;
-			a[2, 4] = 6.15;
-
-			a[3, 0] = 5;
-			a[3, 1] = 4;
-			a[3, 2] = 9.7;
-			a[3, 3] = -7.6;
-			a[3, 4] = -22.9;
-
-			a[4, 0] = 18.32;
-			a[4, 1] = -0.1;
-			a[4, 2] = 3;
-			a[4, 3] = 0.1;
-			a[4, 4] = 0.01;
-
-			Matrix b = a.Reverse();
-			Matrix c = a * b;
-		}
+		static double dt = 0.01;
 
 		static FilterInfo CreateModel()
 		{
@@ -250,21 +161,22 @@ namespace NonlinearFilter
 
 			for (int i = 0; i < 5; i++)
 			{
-				P[i, i] = 0.001;
+				P[i, i] = 10000;
+
 				if (i >= 3)
-					info.Q[i, i] = 0.0000000002;
+					info.Q[i, i] = 0.6;
 			}
 
 			Matrix P1 = P.Clone();
 
 			for (int i = 0; i < 2; i++)
-				info.R[i, i] = 10000;
+				info.R[i, i] = 0.3;
 
 			Vector X = new Vector(5);
 			X[0] = 5.0;
 			X[1] = 3.0;
 			X[2] = 0.0;
-			X[3] = 0.02;
+			X[3] = 0.0;
 			X[4] = 1.0;
 
 			Vector Measurement = new Vector(2);
@@ -278,7 +190,7 @@ namespace NonlinearFilter
 			{
 				using (StreamWriter stream1 = new StreamWriter(PlotterFolderPath + "data1.csv"))
 				using (StreamWriter stream2 = new StreamWriter(PlotterFolderPath + "cov.csv"))
-					for (int i = 0; i < 1000; i++)
+					for (int i = 0; i < 10000; i++)
 					{
 						Vector X1 = new Vector(X.N);
 						for (int k = 0; k < 5; k++)
@@ -289,7 +201,7 @@ namespace NonlinearFilter
 						Vector vk = new Vector(2);
 						for (int k = 0; k < 2; k++)
 						{
-							vk[k] = SampleGaussian(random, 0.0, info.R[k, k]);
+							vk[k] = SampleGaussian(random, 0.0, Sqrt(info.R[k, k]));
 							Measurement[k] = X1[k] + vk[k];
 						}
 
@@ -313,10 +225,12 @@ namespace NonlinearFilter
 
 			Matrix P = new Matrix(5);
 
-			for (int i = 3; i < 5; i++)
+			for (int i = 0; i < 5; i++)
 			{
-				P[i, i] = 0.01;
-				info.Q[i, i] = 0.6;
+				P[i, i] = 0.1;
+
+				if (i >= 3)
+					info.Q[i, i] = 0.006;
 			}
 
 			Matrix P1 = P.Clone();
@@ -328,7 +242,7 @@ namespace NonlinearFilter
 			X[0] = 5.0;
 			X[1] = 3.0;
 			X[2] = 0.0;
-			X[3] = 0.02;
+			X[3] = 0.0;
 			X[4] = 1.0;
 
 			Vector Measurement = new Vector(2);
@@ -349,7 +263,7 @@ namespace NonlinearFilter
 				Vector vk = new Vector(2);
 				for (int k = 0; k < 2; k++)
 				{
-					vk[k] = SampleGaussian(random, 0.0, info.R[k, k]);
+					vk[k] = SampleGaussian(random, 0.0, Sqrt(info.R[k, k]));
 					Measurement[k] = X1[k] + vk[k];
 				}
 
@@ -364,7 +278,7 @@ namespace NonlinearFilter
 		}
 
 		static void AvgErrorTest(int count, int itercount)
-		{		
+		{
 			List<List<double>> nonlinearErrors = new List<List<double>>();
 			List<List<double>> onestepErrors = new List<List<double>>();
 			for (int i = 0; i < count; i++)
@@ -395,41 +309,7 @@ namespace NonlinearFilter
 					stream.WriteLine($"{dt * (i + 1)}; {avgNonlinearError[i]}; {avgOnestepError[i]};");
 			}
 
-			DrawPlot(PlotterFolderPath + "avgcov.csv", 2);
-		}
-
-		static void DrawPlot(string csvData, int plotCount = 1)
-		{
-			ProcessStartInfo start = new ProcessStartInfo();
-			start.FileName = "C:/Users/Nikita/AppData/Local/Programs/Python/Python39/python.exe";
-			start.Arguments = $"{PlotterFolderPath}DrawPlot.py {csvData} {plotCount}";
-			start.UseShellExecute = false;
-			start.RedirectStandardOutput = true;
-			using (Process process = Process.Start(start))
-			{
-				using (StreamReader reader = process.StandardOutput)
-				{
-					string result = reader.ReadToEnd();
-					Console.Write(result);
-				}
-			}
-		}
-
-		static void DrawFilter(string title, string csvData)
-		{
-			ProcessStartInfo start = new ProcessStartInfo();
-			start.FileName = "C:/Users/Nikita/AppData/Local/Programs/Python/Python39/python.exe";
-			start.Arguments = $"{PlotterFolderPath}DrawFilter.py {csvData} {title}";
-			start.UseShellExecute = false;
-			start.RedirectStandardOutput = true;
-			using (Process process = Process.Start(start))
-			{
-				using (StreamReader reader = process.StandardOutput)
-				{
-					string result = reader.ReadToEnd();
-					Console.Write(result);
-				}
-			}
+			Plotter.DrawPlot(PlotterFolderPath + "avgcov.csv", 2, new List<string>() { "nonlinear", "onestep" });
 		}
 
 		static void Main(string[] args)
@@ -438,7 +318,9 @@ namespace NonlinearFilter
 			customCulture.NumberFormat.NumberDecimalSeparator = ".";
 			Thread.CurrentThread.CurrentCulture = customCulture;
 
-			AvgErrorTest(500, 500);
+			AvgErrorTest(200, 1000);
+
+			//OneStepFilterTest2();
 
 			//Thread thread1 = new Thread(() => DrawFilter(PlotterFolderPath + "data1.csv", "nonlinear"));
 			//Thread thread2 = new Thread(() => DrawPlot(PlotterFolderPath + "cov.csv", 2));
