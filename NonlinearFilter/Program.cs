@@ -12,7 +12,7 @@ namespace NonlinearFilter
 	{
 		static string PlotterFolderPath = "C:/Users/Nikita/source/repos/NonlinearFilter/Plotter/";
 
-		static double dt = 0.01;
+		static double dt = 0.1;
 
 		static FilterInfo CreateModel()
 		{
@@ -227,7 +227,7 @@ namespace NonlinearFilter
 
 			for (int i = 0; i < 5; i++)
 			{
-				P[i, i] = 0.1;
+				P[i, i] = 0.0;
 
 				if (i >= 3)
 					info.Q[i, i] = 0.006;
@@ -318,7 +318,7 @@ namespace NonlinearFilter
 			customCulture.NumberFormat.NumberDecimalSeparator = ".";
 			Thread.CurrentThread.CurrentCulture = customCulture;
 
-			AvgErrorTest(200, 1000);
+			AvgErrorTest(200, 500);
 
 			//OneStepFilterTest2();
 
